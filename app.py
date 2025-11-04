@@ -13,6 +13,14 @@ def load_model():
 
 model = load_model()
 
+# 🔍 Debug block: Show model's expected feature names
+try:
+    st.write("### 🧠 Model expected features:")
+    st.write(list(model.feature_names_in_))
+except Exception as e:
+    st.write("Model feature names not available:", e)
+
+
 # Sidebar inputs
 st.sidebar.header("Enter Customer Details")
 age = st.sidebar.number_input("Age", min_value=1, max_value=100, value=30)
