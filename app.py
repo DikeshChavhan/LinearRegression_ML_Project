@@ -1,71 +1,49 @@
 import streamlit as st
 import pandas as pd
-from joblib import load
-from utils import preprocess_input
-from pathlib import Path
+import joblib
 
 st.set_page_config(page_title="Insurance Charges Predictor", layout="centered")
-st.title("Insurance Charges / Cost Predictor")
+st.title("💰 Insurance Charges / Cost Predictor")
 
-MODEL_PATH = Path(__file__).parent / "insurance_model.pkl"
-
+# Load model
 @st.cache_resource
-def load_model(path):
+def load_model():
+    return joblib.load("insurance_model.pkl")
+
+model = load_model()
+
+# Sidebar inputs
+st.sidebar.header("Enter Customer Details")
+age = st.sidebar.number_input("Age", min_value=1, max_value=100, value=30)
+sex = st.sidebar.selectbox("Sex", ["male", "female"])
+bmi = st.sidebar.number_input("BMI", min_value=10.0, max_value=50.0, value=25.0)
+children = st.sidebar.number_input("Number of Children", min_value=0, max_value=10, value=0)
+smoker = st.sidebar.selectbox("Smoker", ["no", "yes"])
+region = st.sidebar.selectbox("Region", ["southeast", "southwest", "northeast", "northwest"])
+
+# Convert inputs to dataframe
+data = {
+    "age": [age],
+    "sex": [sex],
+    "bmi": [bmi],
+    "children": [children],
+    "smoker": [smoker],
+    "region": [region]
+}
+df = pd.DataFrame(data)
+
+# Preprocess
+def preprocess(df):
+    df["sex"] = df["sex"].map({"male": 0, "female": 1})
+    df["smoker"] = df["smoker"].map({"no": 0, "yes": 1})
+    df = pd.get_dummies(df, columns=["region"], drop_first=True)
+    return df
+
+# Prediction
+if st.button("🔮 Predict Charges"):
+    X = preprocess(df)
     try:
-        return load(path)
+        prediction = model.predict(X)[0]
+        st.success(f"Estimated Insurance Charges: ₹{prediction:,.2f}")
     except Exception as e:
-        st.error(f"Failed to load model: {e}")
-        return None
-
-model = load_model(MODEL_PATH)
-
-st.sidebar.header("Manual input")
-inputs = {}
-feature_list = ["age", "bmi", "charges"]
-for col in feature_list:
-    if col in ['sex','smoker','region']:
-        if col == 'sex':
-            inputs[col] = st.sidebar.selectbox("Sex", options=['male','female'])
-        elif col == 'smoker':
-            inputs[col] = st.sidebar.selectbox("Smoker", options=['no','yes'])
-        else:
-            inputs[col] = st.sidebar.selectbox("Region", options=['southeast','southwest','northeast','northwest'])
-    else:
-        default = 30 if col=='age' else 0 if col=='children' else 25.0
-        inputs[col] = st.sidebar.number_input(col.capitalize(), value=default)
-
-use_manual = st.sidebar.button("Predict for manual input")
-uploaded = st.file_uploader("Upload CSV file", type=['csv'])
-
-def predict_df(df):
-    if model is None:
-        st.error("Model not loaded.")
-        return
-    X = preprocess_input(df)
-    try:
-        preds = model.predict(X)
-    except Exception as e:
-        st.error(f"Prediction error: {e}")
-        return
-    df_out = df.copy()
-    df_out['predicted_charges'] = preds
-    return df_out
-
-if uploaded is not None:
-    df = pd.read_csv(uploaded)
-    st.write("Input preview:")
-    st.dataframe(df.head())
-    out = predict_df(df)
-    if out is not None:
-        st.write("Predictions:")
-        st.dataframe(out)
-        st.download_button("Download predictions as CSV", out.to_csv(index=False).encode('utf-8'), "predictions.csv", "text/csv")
-
-if use_manual:
-    import pandas as pd
-    dfm = pd.DataFrame([inputs])
-    st.write("Manual input:")
-    st.dataframe(dfm)
-    out = predict_df(dfm)
-    if out is not None:
-        st.metric("Predicted charges", f"₹{out['predicted_charges'].iloc[0]:.2f}")
+        st.error(f"Error while predicting: {e}")
