@@ -37,14 +37,15 @@ with col2:
 # Preprocess Inputs
 # ------------------------------
 def preprocess(age, sex, bmi, children, smoker, region):
-    # Convert categorical values to numeric (same encoding as training)
-    sex = 1 if sex == "male" else 0
-    smoker = 1 if smoker == "yes" else 0
-
-    region_mapping = {"southwest": 0, "southeast": 1, "northwest": 2, "northeast": 3}
-    region = region_mapping[region]
-
-    return np.array([[age, sex, bmi, children, smoker, region]])
+    # Create DataFrame with one sample
+    data = pd.DataFrame({
+        "age": [age],
+        "sex": [sex],
+        "bmi": [bmi],
+        "children": [children],
+        "smoker": [smoker],
+        "region": [region]
+    })
 
 # ------------------------------
 # Prediction
