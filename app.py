@@ -104,6 +104,15 @@ st.markdown("""
         animation: fadeIn 0.8s ease-in-out;
     }
 
+    .bmi-box {
+        padding: 0.8rem;
+        border-radius: 10px;
+        text-align: center;
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin-top: 1rem;
+    }
+
     @keyframes fadeIn {
         from {opacity: 0; transform: translateY(10px);}
         to {opacity: 1; transform: translateY(0);}
@@ -149,7 +158,23 @@ with st.expander("📏 Don't know your BMI? Click here to calculate it"):
     weight = st.number_input("Enter your weight (in kg)", min_value=30.0, max_value=200.0, value=70.0, key="weight_calc")
     height_m = height / 100
     calculated_bmi = round(weight / (height_m ** 2), 2)
-    st.success(f"✅ Your Calculated BMI: {calculated_bmi}")
+
+    # Determine BMI Category and Color
+    if calculated_bmi < 18.5:
+        color, category = "#fdd835", "Underweight"
+    elif 18.5 <= calculated_bmi < 25:
+        color, category = "#43a047", "Normal"
+    elif 25 <= calculated_bmi < 30:
+        color, category = "#fb8c00", "Overweight"
+    else:
+        color, category = "#e53935", "Obese"
+
+    st.markdown(
+        f"<div class='bmi-box' style='background-color:{color}; color:white;'>"
+        f"✅ Your BMI is <b>{calculated_bmi}</b> — {category}"
+        f"</div>",
+        unsafe_allow_html=True,
+    )
 
 # --- Prepare DataFrame ---
 data = {"age": [age], "bmi": [bmi], "smoker": [smoker]}
