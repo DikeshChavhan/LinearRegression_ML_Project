@@ -5,7 +5,7 @@ import joblib
 # --- Page Configuration ---
 st.set_page_config(page_title="Insurance Charges Predictor", layout="centered")
 
-# --- Custom CSS Styling ---
+# --- Custom Styling ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
@@ -14,7 +14,6 @@ st.markdown("""
         font-family: 'Poppins', sans-serif;
     }
 
-    /* Animated Gradient Background */
     body {
         background: linear-gradient(-45deg, #f3e5f5, #e3f2fd, #fce4ec, #e8f5e9);
         background-size: 400% 400%;
@@ -27,7 +26,6 @@ st.markdown("""
         100% { background-position: 0% 50%; }
     }
 
-    /* Title Styling */
     .title {
         text-align: center;
         font-size: 3rem;
@@ -52,9 +50,8 @@ st.markdown("""
         margin-bottom: 2rem;
     }
 
-    /* Input Container */
     .input-container {
-        max-width: 500px;
+        max-width: 550px;
         margin: 0 auto;
         padding: 2rem;
         border-radius: 1.2rem;
@@ -71,7 +68,6 @@ st.markdown("""
         margin-bottom: 1rem;
     }
 
-    /* Predict Button */
     .predict-btn button {
         background: linear-gradient(to right, #1976d2, #42a5f5);
         color: white !important;
@@ -88,7 +84,6 @@ st.markdown("""
         box-shadow: 0 0 10px rgba(21,101,192,0.4);
     }
 
-    /* Result Box */
     .result-box {
         background: #e8f5e9;
         border-left: 6px solid #43a047;
@@ -99,7 +94,6 @@ st.markdown("""
         animation: fadeIn 0.8s ease-in-out;
     }
 
-    /* Summary Box */
     .summary-box {
         background: #fffde7;
         border-left: 6px solid #fbc02d;
@@ -115,7 +109,6 @@ st.markdown("""
         to {opacity: 1; transform: translateY(0);}
     }
 
-    /* Footer */
     .footer {
         text-align: center;
         color: #444;
@@ -147,9 +140,16 @@ st.markdown("<div class='input-container'>", unsafe_allow_html=True)
 st.markdown("<h4 class='section-header'>Enter Your Details</h4>", unsafe_allow_html=True)
 
 age = st.number_input("Age", min_value=1, max_value=100, value=30)
-bmi = st.number_input("BMI (Body Mass Index)", min_value=10.0, max_value=50.0, value=25.0)
+height = st.number_input("Height (in cm)", min_value=100, max_value=220, value=170)
+weight = st.number_input("Weight (in kg)", min_value=30.0, max_value=200.0, value=70.0)
 smoker = st.selectbox("Do you smoke?", ["no", "yes"])
 
+# --- Calculate BMI Automatically ---
+height_m = height / 100
+bmi = round(weight / (height_m ** 2), 2)
+st.write(f"📏 **Your Calculated BMI:** {bmi}")
+
+# --- Prepare DataFrame ---
 data = {"age": [age], "bmi": [bmi], "smoker": [smoker]}
 df = pd.DataFrame(data)
 
@@ -170,6 +170,8 @@ if st.button("🔮 Predict Insurance Charges"):
         st.markdown("<div class='summary-box'>", unsafe_allow_html=True)
         st.subheader("🧾 Summary of Your Details")
         st.write(f"**Age:** {age}")
+        st.write(f"**Height:** {height} cm")
+        st.write(f"**Weight:** {weight} kg")
         st.write(f"**BMI:** {bmi}")
         st.write(f"**Smoker:** {'Yes' if smoker == 'yes' else 'No'}")
         st.markdown("</div>", unsafe_allow_html=True)
