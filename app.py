@@ -35,38 +35,26 @@ with col2:
     region = st.selectbox("Region", ["southwest", "southeast", "northwest", "northeast"])
 
 # ------------------------------
-# Preprocess Inputs
+# Preprocess Inputs (label encoding)
 # ------------------------------
 def preprocess(age, sex, bmi, children, smoker, region):
-    # Build a single-sample DataFrame
-    df = pd.DataFrame({
-        "age": [age],
-        "sex": [sex],
-        "bmi": [bmi],
-        "children": [children],
-        "smoker": [smoker],
-        "region": [region]
-    })
+    # Encode categorical variables numerically (like training)
+    sex = 1 if sex == "male" else 0
+    smoker = 1 if smoker == "yes" else 0
 
-    # Apply dummy encoding (same as training)
-    df = pd.get_dummies(df, drop_first=True)
+    # Map regions to numbers
+    region_map = {
+        "southwest": 0,
+        "southeast": 1,
+        "northwest": 2,
+        "northeast": 3
+    }
+    region = region_map[region]
 
-    # Expected feature list (you may adjust based on your notebook)
-    expected_cols = [
-        "age", "bmi", "children",
-        "sex_male", "smoker_yes",
-        "region_northwest", "region_southeast", "region_southwest"
-    ]
-
-    # Ensure all expected columns exist
-    for col in expected_cols:
-        if col not in df.columns:
-            df[col] = 0
-
-    # Reorder columns to match model
-    df = df[expected_cols]
-
-    return df
+    # Create DataFrame in same order as training
+    features = pd.DataFrame([[age, sex, bmi, children, smoker, region]],
+                            columns=["age", "sex", "bmi", "children", "smoker", "region"])
+    return features
 
 # ------------------------------
 # Prediction
@@ -79,6 +67,6 @@ if st.button("Predict Charges"):
         st.success(f"💵 Estimated Insurance Charge: **${prediction[0]:,.2f}**")
     except Exception as e:
         st.error(f"⚠️ Model input mismatch: {str(e)}")
-        st.info("Please ensure the app's preprocessing matches the training features exactly.")
+        st.info("If error persists, ensure preprocessing matches training feature encoding.")
 
 st.caption("Developed by **Dikesh Chavhan** | Streamlit App powered by Linear Regression")
