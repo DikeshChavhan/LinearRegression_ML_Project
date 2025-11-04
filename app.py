@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import joblib
 
+# App configuration
 st.set_page_config(page_title="Insurance Charges Predictor", layout="centered")
 st.title("💰 Insurance Charges / Cost Predictor")
 
@@ -32,18 +33,39 @@ data = {
 }
 df = pd.DataFrame(data)
 
-# Preprocess
+# ✅ Corrected Preprocessing Function
 def preprocess(df):
-    df["sex"] = df["sex"].map({"male": 0, "female": 1})
-    df["smoker"] = df["smoker"].map({"no": 0, "yes": 1})
-    df = pd.get_dummies(df, columns=["region"], drop_first=True)
-    return df
+    df = df.copy()
+
+    # Encode categorical variables to match training model format
+    df["sex_male"] = df["sex"].map({"male": 1, "female": 0})
+    df["smoker_yes"] = df["smoker"].map({"yes": 1, "no": 0})
+
+    # One-hot encode 'region'
+    region_dummies = pd.get_dummies(df["region"], prefix="region")
+    df = pd.concat([df, region_dummies], axis=1)
+
+    # Drop original categorical columns
+    df.drop(["sex", "smoker", "region"], axis=1, inplace=True)
+
+    # Ensure all expected columns exist
+    expected_cols = [
+        "age", "bmi", "children",
+        "sex_male", "smoker_yes",
+        "region_northeast", "region_northwest",
+        "region_southeast", "region_southwest"
+    ]
+    for col in expected_cols:
+        if col not in df.columns:
+            df[col] = 0
+
+    return df[expected_cols]
 
 # Prediction
 if st.button("🔮 Predict Charges"):
     X = preprocess(df)
     try:
         prediction = model.predict(X)[0]
-        st.success(f"Estimated Insurance Charges: ₹{prediction:,.2f}")
+        st.success(f"💸 Estimated Insurance Charges: ₹{prediction:,.2f}")
     except Exception as e:
-        st.error(f"Error while predicting: {e}")
+        st.error(f"❌ Error while predicting: {e}")
