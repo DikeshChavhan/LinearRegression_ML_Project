@@ -38,8 +38,8 @@ with col2:
 # Preprocess Inputs
 # ------------------------------
 def preprocess(age, sex, bmi, children, smoker, region):
-    # Create DataFrame with one sample
-    data = pd.DataFrame({
+    # Build a single-sample DataFrame
+    df = pd.DataFrame({
         "age": [age],
         "sex": [sex],
         "bmi": [bmi],
@@ -48,12 +48,37 @@ def preprocess(age, sex, bmi, children, smoker, region):
         "region": [region]
     })
 
+    # Apply dummy encoding (same as training)
+    df = pd.get_dummies(df, drop_first=True)
+
+    # Expected feature list (you may adjust based on your notebook)
+    expected_cols = [
+        "age", "bmi", "children",
+        "sex_male", "smoker_yes",
+        "region_northwest", "region_southeast", "region_southwest"
+    ]
+
+    # Ensure all expected columns exist
+    for col in expected_cols:
+        if col not in df.columns:
+            df[col] = 0
+
+    # Reorder columns to match model
+    df = df[expected_cols]
+
+    return df
+
 # ------------------------------
 # Prediction
 # ------------------------------
 if st.button("Predict Charges"):
     input_data = preprocess(age, sex, bmi, children, smoker, region)
-    prediction = model.predict(input_data)
-    st.success(f"💵 Estimated Insurance Charge: **${prediction[0]:,.2f}**")
+
+    try:
+        prediction = model.predict(input_data)
+        st.success(f"💵 Estimated Insurance Charge: **${prediction[0]:,.2f}**")
+    except Exception as e:
+        st.error(f"⚠️ Model input mismatch: {str(e)}")
+        st.info("Please ensure the app's preprocessing matches the training features exactly.")
 
 st.caption("Developed by **Dikesh Chavhan** | Streamlit App powered by Linear Regression")
